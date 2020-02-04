@@ -4,7 +4,7 @@ An API for managing multiple mouse inputs.
 
 ---
 
-By Amélia O. F. da S. J.
+By Amélia O. F. da S.
 
 ^_^
 
