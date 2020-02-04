@@ -110,6 +110,7 @@ struct input_event *mmapi_wait_adv(mmapi_device *device)
 mmapi_event mmapi_wait(mmapi_device *device)
 {
     struct input_event evt;
+    int diff;
     read(device->evt[0],&evt,sizeof(evt));
     printf("Type: %hu, code: %hu, value: %i\n",evt.type,evt.code,evt.value);
     //These values were experimentally determined. Sorry.
@@ -133,6 +134,11 @@ mmapi_event mmapi_wait(mmapi_device *device)
                 return MMAPI_MCLICKDOWN;
             else return MMAPI_MCLICKUP;
             break;
+        case 330://Touchpad click start
+            if(evt.value)
+                return MMAPI_LCLICKDOWN;
+            else return MMAPI_LCLICKUP;
+            break;
         }
         break;
     case 2://Movement and Scrolling
@@ -152,6 +158,25 @@ mmapi_event mmapi_wait(mmapi_device *device)
             if(evt.value>0)
                 return MMAPI_SCROLLUP;
             else return MMAPI_SCROLLDOWN;
+        }
+        break;
+    case 3://Setting x/y (for trackpads only)
+        switch (evt.code)//Bottom right edge seems to be the maximum value. Top left min.
+        {
+        case 53://x
+            diff=evt.value-device->x;
+            device->x=evt.value;
+            if(diff>0) return MMAPI_MOUSEMRIGHT&MMAPI_UPDATEPOS;
+            else if(diff<0) return MMAPI_MOUSEMLEFT&MMAPI_UPDATEPOS;
+            else return MMAPI_UPDATEPOS;
+            break;
+        case 54://y
+            diff=evt.value-device->y;
+            device->y=evt.value;
+            if(diff>0) return MMAPI_MOUSEMDOWN&MMAPI_UPDATEPOS;
+            else if(diff<0) return MMAPI_MOUSEMUP&MMAPI_UPDATEPOS;
+            else return MMAPI_UPDATEPOS;
+            break;
         }
         break;
     }

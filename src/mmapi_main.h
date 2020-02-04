@@ -32,6 +32,7 @@
 #define MMAPI_MCLICKUP 021
 #define MMAPI_SCROLLUP 022
 #define MMAPI_SCROLLDOWN 024
+#define MMAPI_UPDATEPOS 030
 
 //Macros (don't use)
 #define _mmapi_close_ctl(device)\
@@ -47,6 +48,8 @@ typedef struct _mmapi_device{
     char name[256];
     int ctl[2]; //Pipe going from main to device
     int evt[2]; //Pipe going from device to main
+    int x;//For trackpads only
+    int y;//For trackpads only
 } mmapi_device;
 //A type to abstract input_events
 typedef unsigned int mmapi_event;
