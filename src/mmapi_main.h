@@ -10,6 +10,7 @@
 #include <dirent.h>
 #include <poll.h>
 #include <signal.h>
+#include <errno.h>
 #include <sys/prctl.h>
 #include <sys/wait.h>
 #include <sys/types.h>
@@ -26,21 +27,23 @@
 #define MMAPI_E_NULLPOINTER 01 //Pointers that shouldn't be null are null (check arguments)
 #define MMAPI_E_PIPE 02 //Pipe opening error
 #define MMAPI_E_PATH 04 //Refers to errors when opening files (not strictly related to wrong paths)
+#define MMAPI_E_SHM 010 //Refers to errors related to SHM
+#define MMAPI_E_ACCESS 020 //Refers to errors related to access authorization (files and shm)
 
 //Event codes
 #define MMAPI_MOUSEMUP 01
 #define MMAPI_MOUSEMDOWN 02
 #define MMAPI_MOUSEMRIGHT 04
 #define MMAPI_MOUSEMLEFT 010
-#define MMAPI_LCLICKDOWN 011
-#define MMAPI_LCLICKUP 012
-#define MMAPI_RCLICKDOWN 011
-#define MMAPI_RCLICKUP 014
-#define MMAPI_MCLICKDOWN 020
-#define MMAPI_MCLICKUP 021
-#define MMAPI_SCROLLUP 022
-#define MMAPI_SCROLLDOWN 024
-#define MMAPI_UPDATEPOS 030
+#define MMAPI_LCLICKDOWN 020
+#define MMAPI_LCLICKUP 040
+#define MMAPI_RCLICKDOWN 0100
+#define MMAPI_RCLICKUP 0200
+#define MMAPI_MCLICKDOWN 0400
+#define MMAPI_MCLICKUP 01000
+#define MMAPI_SCROLLUP 02000
+#define MMAPI_SCROLLDOWN 04000
+#define MMAPI_UPDATEPOS 010000
 
 //Macros (don't use)
 #define _mmapi_close_ctl(device)\
@@ -64,10 +67,15 @@ typedef struct _mmapi_device{
     int fd; //File descriptor 
     char name[256];
     int ctl[2]; //Pipe going from main to device
+    char lbtdwn;//For mousedown/mouseup tracking
+    char mbtdwn;//For mousedown/mouseup tracking
+    char rbtdwn;//For mousedown/mouseup tracking
     int x;//For trackpads only
     int y;//For trackpads only
     int shm;//For the event handler
+    int hid;//For the event handler
     int selfshm;//For freeing shm later on
+    int id;//For creating the shm key
 } mmapi_device;
 //A type to abstract input_events
 typedef unsigned int mmapi_event;
