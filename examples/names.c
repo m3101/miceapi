@@ -1,6 +1,8 @@
 #include "../src/mmapi_main.h"
 #include <stdio.h>
 
+//Copyright (c) 2020 Sérgio F. da S. J.
+
 int main()
 {
     char *paths[32];

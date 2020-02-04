@@ -11,6 +11,8 @@
 #include <dirent.h>
 #include <poll.h>
 
+//Copyright (c) 2020 Sérgio F. da S. J.
+
 //Pipe command flags
 #define MMAPI_C_CLOSE 01
 

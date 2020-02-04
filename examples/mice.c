@@ -1,6 +1,8 @@
 #include "../src/mmapi_main.h"
 #include <stdio.h>
 
+//Copyright (c) 2020 Sérgio F. da S. J.
+
 void _mouse(mmapi_device *mouse)
 {
     mmapi_event evt;
@@ -28,7 +30,7 @@ void _pad(mmapi_device *pad)
 int main()
 {
     mmapi_device *mouse,*pad;
-    unsigned int stat=mmapi_create_device("/dev/input/event4",&mouse);
+    unsigned int stat=mmapi_create_device("/dev/input/event5",&mouse);
     if(stat!=0)
     {
         printf("mice.c: could not create device (error %u). Check permissions.\n",stat);
