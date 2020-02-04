@@ -100,10 +100,60 @@ int mmapi_start_thread(mmapi_device *device)
     }
 }
 
+struct input_event *mmapi_wait_adv(mmapi_device *device)
+{
+    struct input_event *evt=malloc(sizeof(struct input_event));
+    read(device->evt[0],evt,sizeof(evt));
+    return evt;
+}
+
 mmapi_event mmapi_wait(mmapi_device *device)
 {
     struct input_event evt;
-    printf("Name: %s\n",device->name);
     read(device->evt[0],&evt,sizeof(evt));
-    return 10U;
+    printf("Type: %hu, code: %hu, value: %i\n",evt.type,evt.code,evt.value);
+    //These values were experimentally determined. Sorry.
+    switch (evt.type)
+    {
+    case 1://Clicks
+        switch(evt.code)
+        {
+        case 272://Left mouse button
+            if(evt.value)
+                return MMAPI_LCLICKDOWN;
+            else return MMAPI_LCLICKUP;
+            break;
+        case 273://Right mouse button
+            if(evt.value)
+                return MMAPI_RCLICKDOWN;
+            else return MMAPI_RCLICKUP;
+            break;
+        case 274://Middle mouse button
+            if(evt.value)
+                return MMAPI_MCLICKDOWN;
+            else return MMAPI_MCLICKUP;
+            break;
+        }
+        break;
+    case 2://Movement and Scrolling
+        switch(evt.code)
+        {
+        case 0://Horizontal movement
+            if(evt.value>0)
+                return MMAPI_MOUSEMRIGHT;
+            else if(evt.value<0)return MMAPI_MOUSEMLEFT;
+            break;
+        case 1://Vertical movement
+            if(evt.value<0)
+                return MMAPI_MOUSEMUP;
+            else if(evt.value>0)return MMAPI_MOUSEMDOWN;
+            break;
+        case 8://Scrolling
+            if(evt.value>0)
+                return MMAPI_SCROLLUP;
+            else return MMAPI_SCROLLDOWN;
+        }
+        break;
+    }
+    return 0;
 }

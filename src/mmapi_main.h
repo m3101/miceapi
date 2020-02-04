@@ -23,6 +23,15 @@
 #define MMAPI_MOUSEMUP 01
 #define MMAPI_MOUSEMDOWN 02
 #define MMAPI_MOUSEMRIGHT 04
+#define MMAPI_MOUSEMLEFT 010
+#define MMAPI_LCLICKDOWN 011
+#define MMAPI_LCLICKUP 012
+#define MMAPI_RCLICKDOWN 011
+#define MMAPI_RCLICKUP 014
+#define MMAPI_MCLICKDOWN 020
+#define MMAPI_MCLICKUP 021
+#define MMAPI_SCROLLUP 022
+#define MMAPI_SCROLLDOWN 024
 
 //Macros (don't use)
 #define _mmapi_close_ctl(device)\
@@ -49,5 +58,7 @@ int mmapi_start(mmapi_device *device,char* path);
 int mmapi_start_thread(mmapi_device *device);
 //Wait for an event coming from the device
 mmapi_event mmapi_wait(mmapi_device *device);
+//Advanced form of mmapi_wait. Return the raw input_event (see linux/input.h for reference)
+struct input_event *mmapi_wait_adv(mmapi_device *device);
 //Creates and starts monitoring a device at path <path> (device should be a null pointer)
 int mmapi_create_device(char* path,mmapi_device** device);
