@@ -1,6 +1,6 @@
 #include "mmapi_main.h"
 
-//Copyright (c) 2020 Sérgio F. da S. J.
+//Copyright (c) 2020 Amélia O. F. da S. J.
 
 int mmapi_create_device(char* path,mmapi_device **device)
 {
