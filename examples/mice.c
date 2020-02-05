@@ -6,7 +6,7 @@
 
 int main()
 {
-    mmapi_device *mouse,*pad;
+    mmapi_device *mouse;
     unsigned int stat=mmapi_create_device("/dev/input/event5",&mouse);//event5 happened to be my mouse. Use names.c to find the available devices.
     mmapi_handler *clickwaiter;
     mmapi_handler *movetracker;

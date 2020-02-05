@@ -7,6 +7,9 @@
 
 //Copyright (c) 2020 Amélia O. F. da S.
 
+//Shared memory id initial number
+#define MMAPI_H_SHMID 20
+
 //Handler types
 #define MMAPI_H_RAW 00//Raw handler
 #define MMAPI_H_DEC 01//Decoded (mouse and trackpad) handler

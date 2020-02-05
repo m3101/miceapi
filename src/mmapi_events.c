@@ -5,7 +5,7 @@ int mmapi_hid=1;
 mmapi_handler *mmapi_addhandler(mmapi_device *device)
 {
     if(!device)return NULL;
-    key_t key=ftok(".",10+mmapi_hid);
+    key_t key=ftok(".",MMAPI_H_SHMID+mmapi_hid);
     int shm=shmget(key,sizeof(mmapi_handler),IPC_CREAT);
     if(shm==-1)
     {
@@ -52,10 +52,29 @@ mmapi_handler *mmapi_addhandler(mmapi_device *device)
 
 int mmapi_remove_handler(mmapi_device *device,int id)
 {
+    int shmid;
     if(!device)return -1;
     if(!device->shm)return -2;
-    mmapi_handler *cur=shmat(device->shm,(void*)0,0);
-    //WIP
+    mmapi_handler *cur=shmat(device->shm,(void*)0,0),*prev=0;
+    if(!cur)return -3;
+    if(cur->id==id)
+    {
+        device->shm=cur->next;
+        shmid=cur->shm;
+        shmdt(cur);
+        shmctl(shmid,IPC_RMID,0);
+        return 0;
+    }
+    while(cur->id!=id)
+    {
+        if(prev)shmdt(prev);
+        prev=cur;
+        cur=shmat(cur->next,(void*)0,0);
+    }
+    prev->next=cur->next;
+    shmdt(cur);
+    shmid=cur->shm;
+    shmctl(shmid,IPC_RMID,0);
     return 0;
 }
 
@@ -80,8 +99,6 @@ mmapi_event mmapi_wait_handler(mmapi_handler *hand)
 
 int mmapi_free_handlers(int handler,int hid)
 {
-    key_t key=ftok(".",10+hid);
-    int nexts;
     mmapi_handler *hand;
     if(handler)
     {
@@ -96,4 +113,5 @@ int mmapi_free_handlers(int handler,int hid)
             shmctl(handler,IPC_RMID,0);
         }
     }
+    return 0;
 }

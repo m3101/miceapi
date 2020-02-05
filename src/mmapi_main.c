@@ -8,7 +8,7 @@ int mmapi_deviceid=0;
 int mmapi_create_device(char* path,mmapi_device **device)
 {
     int ret=0;
-    key_t key=ftok(".",128+mmapi_deviceid);
+    key_t key=ftok(".",mmapi_deviceid);
     int shm=shmget(key,sizeof(mmapi_device),IPC_CREAT);
     (*device)=shmat(shm,(void*)0,0);
     if(!(*device)||(*device)==(void*)~0)return errno&EINVAL?MMAPI_E_SHM:MMAPI_E_ACCESS&MMAPI_E_SHM;
@@ -31,7 +31,7 @@ int mmapi_available_names(char** names,char** paths,int len,int name_size,int pa
     char path[path_size];
     if(idev)
     {
-        while(entry=readdir(idev))
+        while((entry=readdir(idev)))
         {
             if(entry->d_type==DT_CHR)
             {
@@ -71,7 +71,7 @@ int mmapi_start_thread(mmapi_device *device)
 {
     int ppid=getpid();
     int f;
-    key_t key=ftok(".",128+device->id);
+    key_t key=ftok(".",device->id);
 
     int shm=shmget(key,sizeof(mmapi_device),0);
     device=shmat(shm,(void*)0,0);
@@ -89,15 +89,12 @@ int mmapi_start_thread(mmapi_device *device)
         diewithparent(ppid)
 
         struct input_event evt;
-        unsigned int command;
         mmapi_handler *curh;
         int nexth;
         while(device)
         {
             if(read(device->fd,&evt,sizeof(evt))!=-1)
             {
-                key_t key2=ftok("shm",10+device->hid);
-                int wstat;
                 mmapi_event decoded=mmapi_decode(device,&evt);
                 if(decoded==0)continue;
                 if(device->shm)
@@ -222,4 +219,5 @@ int mmapi_free_device(mmapi_device **device)
         shmctl(shmid,IPC_RMID,0);
         *device=NULL;
     }
+    return 0;
 }
