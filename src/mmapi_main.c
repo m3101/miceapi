@@ -1,6 +1,5 @@
 #include "mmapi_main.h"
 #include "mmapi_events.h"
-#include <stdio.h>
 
 //Copyright (c) 2020 Amélia O. F. da S.
 
@@ -129,7 +128,6 @@ int mmapi_start_thread(mmapi_device *device)
                 }
             }
         }
-        printf("Thread dead.");
         return 0;
     }
 }

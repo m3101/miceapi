@@ -47,10 +47,16 @@
 #define MMAPI_SCROLLDOWN 04000
 #define MMAPI_UPDATEPOS 010000
 
+//Event combination codes
+#define MMAPI_MOVEMENT 017
+#define MMAPI_CLICKDOWN 0520
+#define MMAPI_CLICKUP 01240
+#define MMAPI_SCROLL 03000
+
 //Thanks to maxschlepzig for this safety mechanism [https://stackoverflow.com/a/36945270]
 #define diewithparent(pid)\
         int r = prctl(PR_SET_PDEATHSIG, SIGTERM);\
-        if (r == -1) { perror(0); exit(1); }\
+        if (r == -1) {  exit(1); }\
         if (getppid() != pid)\
           exit(1);\
 

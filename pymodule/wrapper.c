@@ -6,7 +6,7 @@
 //Copyright (c) 2020 Amélia O. F. da S.
 
 /*
-    mmapi.listDevices
+####mmapi.listDevices
     Returns a list of the first 64 devices' names and paths
     [(name,path),...]
 */
@@ -54,6 +54,11 @@ mmapi_listDevices(PyObject *self, PyObject *args)
     }
     return (PyObject*) ret;
 }
+
+/*
+####mmapi.Device
+    An abstraction of the C MMAPI mmapi_device and mmapi_handler
+*/
 
 typedef struct {
     PyObject_HEAD
@@ -108,6 +113,192 @@ device_init(deviceObject *self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
+/*
+Device methods:
+    (string)movement=device.wait_move()
+        Synchronously waits for mouse movement and returns a string corresponding to the direction
+        (up,down,left or right)
+    (string)click=device.wait_mousedown(left=True,mid=False,right=False)
+        Syncrhronously waits for a mousedown event on any of the buttons whose value was 'true' in the arguments
+        If all buttons are false, it does nothing.
+        Returns the button that was pressed (left,mid or right)
+    (string)click=device.wait_mouseup(left=True,mid=False,right=False)
+        Analogous to wait_mousedown, but for a mouseup event
+    (string)dir=device.wait_scroll()
+        Synchronously waits for scrolling. Returns the scroll direction (up or down)
+*/
+
+static PyObject *
+device_wait_move(deviceObject *self, PyObject *args)
+{
+    if(!self->ob_devobj)
+    {
+        PyErr_SetString(PyExc_RuntimeError,"device object hasn't been properly instantiated");
+        return NULL;
+    }
+    mmapi_handler *movehandler=mmapi_addhandler(self->ob_devobj);
+    if(!movehandler)
+    {
+        PyErr_SetString(PyExc_RuntimeError,"couldn't attach handler object. Maybe shared memory is full?");
+        return NULL;
+    }
+    mmapi_event evt=0;
+    while(!(evt&MMAPI_MOVEMENT))evt=mmapi_wait_handler(movehandler);
+    mmapi_remove_handler(self->ob_devobj,movehandler->id);
+    switch (evt&MMAPI_MOVEMENT)
+    {
+        case MMAPI_MOUSEMDOWN:
+            return _PyUnicode_FromASCII("down",4);
+            break;
+        case MMAPI_MOUSEMUP:
+            return _PyUnicode_FromASCII("up",2);
+            break;
+        case MMAPI_MOUSEMLEFT:
+            return _PyUnicode_FromASCII("left",4);
+            break;
+        case MMAPI_MOUSEMRIGHT:
+            return _PyUnicode_FromASCII("right",5);
+            break;
+    }
+    return _PyUnicode_FromASCII("unknown",7);
+}
+
+static PyObject *
+device_wait_mousedown(deviceObject *self, PyObject *args, PyObject *kwds)
+{
+    int left=2,mid=2,right=2;
+    static char *kwlist[] = {"left","mid","right", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ppp", kwlist,
+                                     &left,&mid,&right))
+        return NULL;
+    if(left==2)left=1;
+    if(mid==2)mid=0;
+    if(right==2)right=0;
+
+    if(left==0&&mid==0&&right==0)return _PyUnicode_FromASCII("unknown",7);
+
+    if(!self->ob_devobj)
+    {
+        PyErr_SetString(PyExc_RuntimeError,"device object hasn't been properly instantiated");
+        return NULL;
+    }
+    mmapi_handler *clickhandler=mmapi_addhandler(self->ob_devobj);
+    if(!clickhandler)
+    {
+        PyErr_SetString(PyExc_RuntimeError,"couldn't attach handler object. Maybe shared memory is full?");
+        return NULL;
+    }
+    mmapi_event evt=0;
+    while(!(
+            (left&&(evt&MMAPI_LCLICKDOWN))||
+            (mid&&(evt&MMAPI_MCLICKDOWN))||
+            (right&&(evt&MMAPI_RCLICKDOWN))
+        )){
+        evt=mmapi_wait_handler(clickhandler);}
+    mmapi_remove_handler(self->ob_devobj,clickhandler->id);
+    switch (evt&MMAPI_CLICKDOWN)
+    {
+    case MMAPI_LCLICKDOWN:
+        return _PyUnicode_FromASCII("left",4);
+        break;
+    case MMAPI_MCLICKDOWN:
+        return _PyUnicode_FromASCII("mid",3);
+        break;
+    case MMAPI_RCLICKDOWN:
+        return _PyUnicode_FromASCII("right",5);
+        break;
+    default:
+        return _PyUnicode_FromASCII("unknown",7);
+        break;
+    }
+}
+
+static PyObject *
+device_wait_mouseup(deviceObject *self, PyObject *args, PyObject *kwds)
+{
+    char left=2,mid=2,right=2;
+    static char *kwlist[] = {"left","mid","right", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ppp", kwlist,
+                                     &left,&mid,&right))
+        return NULL;
+    if(left==2)left=1;
+    if(mid==2)mid=0;
+    if(right==2)right=0;
+
+    if(left==0&&mid==0&&right==0)return _PyUnicode_FromASCII("unknown",7);
+    if(!self->ob_devobj)
+    {
+        PyErr_SetString(PyExc_RuntimeError,"device object hasn't been properly instantiated");
+        return NULL;
+    }
+    mmapi_handler *clickhandler=mmapi_addhandler(self->ob_devobj);
+    if(!clickhandler)
+    {
+        PyErr_SetString(PyExc_RuntimeError,"couldn't attach handler object. Maybe shared memory is full?");
+        return NULL;
+    }
+    mmapi_event evt=0;
+    while(!(
+            (left&&(evt&MMAPI_LCLICKUP))||
+            (mid&&(evt&MMAPI_MCLICKUP))||
+            (right&&(evt&MMAPI_RCLICKUP))
+        ))
+        evt=mmapi_wait_handler(clickhandler);
+    mmapi_remove_handler(self->ob_devobj,clickhandler->id);
+    switch (evt&MMAPI_CLICKUP)
+    {
+    case MMAPI_LCLICKUP:
+        return _PyUnicode_FromASCII("left",4);
+        break;
+    case MMAPI_MCLICKUP:
+        return _PyUnicode_FromASCII("mid",3);
+        break;
+    case MMAPI_RCLICKUP:
+        return _PyUnicode_FromASCII("right",5);
+        break;
+    default:
+        return _PyUnicode_FromASCII("unknown",7);
+        break;
+    }
+}
+
+static PyObject *
+device_wait_scroll(deviceObject *self, PyObject *args)
+{
+    if(!self->ob_devobj)
+    {
+        PyErr_SetString(PyExc_RuntimeError,"device object hasn't been properly instantiated");
+        return NULL;
+    }
+    mmapi_handler *scrollhandler=mmapi_addhandler(self->ob_devobj);
+    if(!scrollhandler)
+    {
+        PyErr_SetString(PyExc_RuntimeError,"couldn't attach handler object. Maybe shared memory is full?");
+        return NULL;
+    }
+    mmapi_event evt=0;
+    while(!(evt&MMAPI_SCROLL))evt=mmapi_wait_handler(scrollhandler);
+    mmapi_remove_handler(self->ob_devobj,scrollhandler->id);
+    switch (evt&MMAPI_SCROLL)
+    {
+        case MMAPI_SCROLLUP:
+            return _PyUnicode_FromASCII("up",4);
+            break;
+        case MMAPI_SCROLLDOWN:
+            return _PyUnicode_FromASCII("down",2);
+            break;
+    }
+    return _PyUnicode_FromASCII("unknown",7);
+}
+
+static PyMethodDef device_methods[] = {
+    {"wait_move", (PyCFunction) device_wait_move, METH_NOARGS},
+    {"wait_mousedown", (PyCFunction) device_wait_mousedown, METH_VARARGS|METH_KEYWORDS},
+    {"wait_mouseup", (PyCFunction) device_wait_mouseup, METH_VARARGS|METH_KEYWORDS},
+    {"wait_scroll", (PyCFunction) device_wait_scroll, METH_NOARGS},
+    {NULL}
+};
+
 static PyTypeObject deviceType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "mmapi.Device",
@@ -118,7 +309,13 @@ static PyTypeObject deviceType = {
     .tp_new = device_new,
     .tp_dealloc = (destructor) device_dealloc,
     .tp_init = (initproc) device_init,
+    .tp_methods = device_methods,
 };
+
+/*
+####mmapi
+    Module definitions
+*/
 
 static PyMethodDef mmapiMethods[] = {
     {"listDevices",mmapi_listDevices,METH_NOARGS,

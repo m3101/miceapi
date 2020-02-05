@@ -1,6 +1,8 @@
 #include "mmapi_main.h"
 #include "mmapi_events.h"
 
+#include <stdio.h>
+
 //Copyright (c) 2020 Amélia O. F. da S.
 
 int mmapi_hid=1;
@@ -14,7 +16,7 @@ mmapi_handler *mmapi_addhandler(mmapi_device *device)
         return NULL;
     }
     int nexts;
-    int i;
+    unsigned long int i;
     mmapi_handler *hand=shmat(shm,(void*)0,0);
     mmapi_handler *next;
     if(!hand||hand==(void*)~0)return NULL;
@@ -97,6 +99,12 @@ mmapi_event mmapi_wait_handler(mmapi_handler *hand)
     while(evt==0)
     {
         evt=*((mmapi_event*)&hand->buffer[pos]);
+        /*
+        The python module was having problems when this checking was too fast.
+        I don't really know why, but sleeping makes it work.
+        I guess it has something to do with the shared memory.
+        */
+        usleep(100);
     }
     strncpy(&hand->buffer[pos],(char*)&zero,sizeof(mmapi_event));//Zero the buffer location
     hand->cc++;

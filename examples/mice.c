@@ -54,12 +54,7 @@ int main()
         while(1)
         {
             evt=mmapi_wait_handler(movetracker);
-            switch (
-                (evt&MMAPI_MOUSEMDOWN)|
-                (evt&MMAPI_MOUSEMUP)|
-                (evt&MMAPI_MOUSEMLEFT)|
-                (evt&MMAPI_MOUSEMRIGHT)
-                )
+            switch (evt&MMAPI_MOVEMENT)
             {
                 case MMAPI_MOUSEMDOWN:
                     printf("V\r");
