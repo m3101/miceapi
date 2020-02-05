@@ -36,6 +36,10 @@ typedef struct _mmapi_handler {
 */
 mmapi_handler *mmapi_addhandler(mmapi_device *device);
 /*
+    Detaches the handler with id <int id> from device <mmapi_device *device>
+*/
+int mmapi_remove_handler(mmapi_device *device,int id);
+/*
     Waits for an answer at handler <mmapi_handler *hand>.
     (Pre-decoded)
 */

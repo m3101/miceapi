@@ -4,6 +4,11 @@
 
 //Copyright (c) 2020 Amélia O. F. da S.
 
+/*
+A simple program to showcase the API's main functionalities.
+It tracks the device at event5 (change it to one of your pointer devices)
+*/
+
 int main()
 {
     mmapi_device *mouse;
@@ -49,7 +54,12 @@ int main()
         while(1)
         {
             evt=mmapi_wait_handler(movetracker);
-            switch (evt)
+            switch (
+                (evt&MMAPI_MOUSEMDOWN)|
+                (evt&MMAPI_MOUSEMUP)|
+                (evt&MMAPI_MOUSEMLEFT)|
+                (evt&MMAPI_MOUSEMRIGHT)
+                )
             {
                 case MMAPI_MOUSEMDOWN:
                     printf("V\r");
@@ -74,7 +84,7 @@ int main()
     //This thread, the main thread, will wait for a mouse click to die
     evt=0;
     printf("Main thread waiting for click...\n");
-    while(!(evt&MMAPI_LCLICKDOWN))
+    while(!(evt&MMAPI_LCLICKUP))
     {
         evt=mmapi_wait_handler(clickwaiter);
     }

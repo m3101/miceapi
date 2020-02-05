@@ -3,6 +3,10 @@
 
 //Copyright (c) 2020 Amélia O. F. da S.
 
+/*
+Demonstrates a possible use for mmapi_device_names
+*/
+
 int main()
 {
     char *paths[32];

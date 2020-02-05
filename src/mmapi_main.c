@@ -11,7 +11,7 @@ int mmapi_create_device(char* path,mmapi_device **device)
     key_t key=ftok(".",mmapi_deviceid);
     int shm=shmget(key,sizeof(mmapi_device),IPC_CREAT);
     (*device)=shmat(shm,(void*)0,0);
-    if(!(*device)||(*device)==(void*)~0)return errno&EINVAL?MMAPI_E_SHM:MMAPI_E_ACCESS&MMAPI_E_SHM;
+    if(!(*device)||(*device)==(void*)~0)return errno&EINVAL?MMAPI_E_SHM:MMAPI_E_ACCESS|MMAPI_E_SHM;
     (*device)->shm=0;
     (*device)->id=mmapi_deviceid++;
     (*device)->selfshm=shm;
@@ -58,7 +58,7 @@ int mmapi_start(mmapi_device *device,char *path)
         device->fd=open(path, O_RDONLY|O_NONBLOCK);
         if(device->fd==-1)
         {
-            return errno==EACCES?MMAPI_E_ACCESS&MMAPI_E_PATH:MMAPI_E_PATH;
+            return errno==EACCES?MMAPI_E_ACCESS|MMAPI_E_PATH:MMAPI_E_PATH;
         }
         ioctl(device->fd,EVIOCGNAME(sizeof(device->name)),device->name);
         return mmapi_start_thread(device);
@@ -191,15 +191,15 @@ mmapi_event mmapi_decode(mmapi_device *device,struct input_event *evt)
             case 53://x
                 diff=evt->value-device->x;
                 device->x=evt->value;
-                if(diff>0) return MMAPI_MOUSEMRIGHT&MMAPI_UPDATEPOS;
-                else if(diff<0) return MMAPI_MOUSEMLEFT&MMAPI_UPDATEPOS;
+                if(diff>0) return MMAPI_MOUSEMRIGHT|MMAPI_UPDATEPOS;
+                else if(diff<0) return MMAPI_MOUSEMLEFT|MMAPI_UPDATEPOS;
                 else return MMAPI_UPDATEPOS;
                 break;
             case 54://y
                 diff=evt->value-device->y;
                 device->y=evt->value;
-                if(diff>0) return MMAPI_MOUSEMDOWN&MMAPI_UPDATEPOS;
-                else if(diff<0) return MMAPI_MOUSEMUP&MMAPI_UPDATEPOS;
+                if(diff>0) return MMAPI_MOUSEMDOWN|MMAPI_UPDATEPOS;
+                else if(diff<0) return MMAPI_MOUSEMUP|MMAPI_UPDATEPOS;
                 else return MMAPI_UPDATEPOS;
                 break;
             }

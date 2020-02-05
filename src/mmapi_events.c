@@ -1,6 +1,8 @@
 #include "mmapi_main.h"
 #include "mmapi_events.h"
 
+//Copyright (c) 2020 Amélia O. F. da S.
+
 int mmapi_hid=1;
 mmapi_handler *mmapi_addhandler(mmapi_device *device)
 {
@@ -69,6 +71,12 @@ int mmapi_remove_handler(mmapi_device *device,int id)
     {
         if(prev)shmdt(prev);
         prev=cur;
+        if(!cur->next)
+        {
+            shmdt(prev);
+            shmdt(cur);
+            return -4;
+        }
         cur=shmat(cur->next,(void*)0,0);
     }
     prev->next=cur->next;
