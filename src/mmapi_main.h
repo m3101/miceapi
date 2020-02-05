@@ -20,7 +20,27 @@
 #include <sys/shm.h> 
 #include <linux/input.h>
 
-//Copyright (c) 2020 Amélia O. F. da S.
+/*
+Copyright (c) 2020 Amélia O. F. da S.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 
 //Pipe command flags
 #define MMAPI_C_CLOSE 01
@@ -46,12 +66,21 @@
 #define MMAPI_SCROLLUP 02000
 #define MMAPI_SCROLLDOWN 04000
 #define MMAPI_UPDATEPOS 010000
+#define MMAPI_OTHER 0200000 //For keyboard events, for example
 
 //Event combination codes
 #define MMAPI_MOVEMENT 017
 #define MMAPI_CLICKDOWN 0520
 #define MMAPI_CLICKUP 01240
 #define MMAPI_SCROLL 03000
+
+/*
+    A macro for unpacking mmapi_event objects into a code(16bit) and a value(15bit)
+*/
+//That is: event = [15bits-value|1bit-MMAPI_OTHER flag|16bits-code](little endian)
+#define mmapi_unpackevt(event,uint16_code,int_value)\
+                        uint16_code=(event<<((sizeof(event)*8)-16))>>((sizeof(event)*8)-16));\
+                        int_value=event>>17;
 
 //Thanks to maxschlepzig for this safety mechanism [https://stackoverflow.com/a/36945270]
 #define diewithparent(pid)\
@@ -71,6 +100,8 @@ typedef struct _mmapi_device{
     int y;//For trackpads only
     int shm;//For the event handler
     int hid;//For the event handler
+    int ashm;//For the raw event handler
+    int ahid;//For the raw event handler
     int selfshm;//For freeing shm later on
     int id;//For creating the shm key
 } mmapi_device;
@@ -103,4 +134,10 @@ mmapi_event mmapi_decode(mmapi_device *device,struct input_event *evt);
     Frees a device.
 */
 int mmapi_free_device(mmapi_device **device);
+
+/*
+    Internal function. It works as a strncpy that copies exactly n bytes (regardless of null termination)
+*/
+void mmapi_bufncpy(void*dest,void*src,int n);
+
 #endif

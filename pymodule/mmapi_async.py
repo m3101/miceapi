@@ -1,4 +1,4 @@
-#Copyright (c) Amélia O. F. da S.
+#Copyright (c) 2020 Amélia O. F. da S.
 import threading
 def _wait_move_async(device,callback):
     move=device.wait_move()
