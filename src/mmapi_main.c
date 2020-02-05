@@ -7,7 +7,7 @@
 int mmapi_deviceid=0;
 int mmapi_create_device(char* path,mmapi_device **device)
 {
-    int ret;
+    int ret=0;
     key_t key=ftok(".",128+mmapi_deviceid);
     int shm=shmget(key,sizeof(mmapi_device),IPC_CREAT);
     (*device)=shmat(shm,(void*)0,0);
@@ -20,7 +20,7 @@ int mmapi_create_device(char* path,mmapi_device **device)
     (*device)->selfshm=shm;
     if((ret=mmapi_start(*device,path))<0)
     {
-        shmdt(device);
+        shmdt(*device);
     }
     return ret;
 }
@@ -100,7 +100,7 @@ int mmapi_start_thread(mmapi_device *device)
         mmapi_handler *curh;
         int nexth;
         close(device->ctl[1]);//Close write
-        while(1)
+        while(device)
         {
             if(read(device->fd,&evt,sizeof(evt))!=-1)
             {
@@ -136,8 +136,8 @@ int mmapi_start_thread(mmapi_device *device)
                         }
                         nexth=curh->next;
                     }
+                    shmdt(curh);
                 }
-                shmdt(curh);
             }
         }
         printf("Thread dead.");
@@ -219,16 +219,16 @@ mmapi_event mmapi_decode(mmapi_device *device,struct input_event *evt)
     return 0;
 }
 
-int mmapi_free_device(mmapi_device *device)
+int mmapi_free_device(mmapi_device **device)
 {
     int shmid;
-    if(device)
+    if(device&&*device)
     {
-        write(device->ctl[1],MMAPI_C_CLOSE,sizeof(MMAPI_C_CLOSE));
-        mmapi_free_handlers(device->shm,device->hid);
-        shmid=device->selfshm;
-        shmdt(device);
+        write((*device)->ctl[1],MMAPI_C_CLOSE,sizeof(MMAPI_C_CLOSE));
+        mmapi_free_handlers((*device)->shm,(*device)->hid);
+        shmid=(*device)->selfshm;
+        shmdt(*device);
         shmctl(shmid,IPC_RMID,0);
-        device=NULL;
+        *device=NULL;
     }
 }

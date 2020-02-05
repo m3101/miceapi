@@ -79,6 +79,6 @@ int main()
         evt=mmapi_wait_handler(clickwaiter);
     }
     printf("Closing everything...\n");
-    mmapi_free_device(mouse);
+    mmapi_free_device(&mouse);
     return 0;
 }

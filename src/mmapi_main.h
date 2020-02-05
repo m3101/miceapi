@@ -1,4 +1,6 @@
-#define _GNU_SOURCE
+#ifndef _GNU_SOURCE
+    #define _GNU_SOURCE
+#endif
 #ifndef MMAPI_MAIN
 #define MMAPI_MAIN
 #include <stdlib.h>
@@ -105,5 +107,5 @@ mmapi_event mmapi_decode(mmapi_device *device,struct input_event *evt);
 /*
     Frees a device.
 */
-int mmapi_free_device(mmapi_device *device);
+int mmapi_free_device(mmapi_device **device);
 #endif
