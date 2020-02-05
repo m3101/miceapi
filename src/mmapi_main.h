@@ -47,13 +47,6 @@
 #define MMAPI_SCROLLDOWN 04000
 #define MMAPI_UPDATEPOS 010000
 
-//Macros (don't use)
-#define _mmapi_close_ctl(device)\
-    close(device->ctl[0]);close(device->ctl[1]);\
-    device->ctl[0]=device->ctl[1]=NULL;
-#define _mmapi_close_evt(device)\
-    close(device->evt[0]);close(device->evt[1]);\
-    device->evt[0]=device->evt[1]=NULL;
 //Thanks to maxschlepzig for this safety mechanism [https://stackoverflow.com/a/36945270]
 #define diewithparent(pid)\
         int r = prctl(PR_SET_PDEATHSIG, SIGTERM);\
@@ -68,10 +61,6 @@
 typedef struct _mmapi_device{
     int fd; //File descriptor 
     char name[256];
-    int ctl[2]; //Pipe going from main to device
-    char lbtdwn;//For mousedown/mouseup tracking
-    char mbtdwn;//For mousedown/mouseup tracking
-    char rbtdwn;//For mousedown/mouseup tracking
     int x;//For trackpads only
     int y;//For trackpads only
     int shm;//For the event handler

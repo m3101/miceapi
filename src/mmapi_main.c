@@ -11,12 +11,9 @@ int mmapi_create_device(char* path,mmapi_device **device)
     key_t key=ftok(".",128+mmapi_deviceid);
     int shm=shmget(key,sizeof(mmapi_device),IPC_CREAT);
     (*device)=shmat(shm,(void*)0,0);
-    if(!(*device)||(*device)==~0)return errno&EINVAL?MMAPI_E_SHM:MMAPI_E_ACCESS&MMAPI_E_SHM;
-    (*device)->shm=NULL;
+    if(!(*device)||(*device)==(void*)~0)return errno&EINVAL?MMAPI_E_SHM:MMAPI_E_ACCESS&MMAPI_E_SHM;
+    (*device)->shm=0;
     (*device)->id=mmapi_deviceid++;
-    (*device)->lbtdwn=0;
-    (*device)->mbtdwn=0;
-    (*device)->rbtdwn=0;
     (*device)->selfshm=shm;
     if((ret=mmapi_start(*device,path))<0)
     {
@@ -58,12 +55,9 @@ int mmapi_start(mmapi_device *device,char *path)
 {
     if(device&&path)
     {
-        if(pipe(device->ctl)==-1)
-            return MMAPI_E_PIPE;
         device->fd=open(path, O_RDONLY|O_NONBLOCK);
         if(device->fd==-1)
         {
-            _mmapi_close_ctl(device);
             return errno==EACCES?MMAPI_E_ACCESS&MMAPI_E_PATH:MMAPI_E_PATH;
         }
         ioctl(device->fd,EVIOCGNAME(sizeof(device->name)),device->name);
@@ -81,12 +75,11 @@ int mmapi_start_thread(mmapi_device *device)
 
     int shm=shmget(key,sizeof(mmapi_device),0);
     device=shmat(shm,(void*)0,0);
-    if(device==~0||device==0)return MMAPI_E_SHM;
+    if(device==(void*)~0||device==(void*)0)return MMAPI_E_SHM;
 
     f=fork();
     if(f>0)//Main thread
     {
-        close(device->ctl[0]);//Close read
         return 0;
     }
     else if(f<0)
@@ -99,7 +92,6 @@ int mmapi_start_thread(mmapi_device *device)
         unsigned int command;
         mmapi_handler *curh;
         int nexth;
-        close(device->ctl[1]);//Close write
         while(device)
         {
             if(read(device->fd,&evt,sizeof(evt))!=-1)
@@ -117,7 +109,7 @@ int mmapi_start_thread(mmapi_device *device)
                     }
                     if(curh->type&MMAPI_H_DEC)
                     {
-                        strncpy(&curh->buffer[(curh->ec++)*sizeof(mmapi_event)],&decoded,sizeof(mmapi_event));
+                        strncpy(&curh->buffer[(curh->ec++)*sizeof(mmapi_event)],(char*)&decoded,sizeof(mmapi_event));
                         curh->ec%=MMAPI_H_BUFSIZ;
                     }
                     nexth=curh->next;
@@ -224,7 +216,6 @@ int mmapi_free_device(mmapi_device **device)
     int shmid;
     if(device&&*device)
     {
-        write((*device)->ctl[1],MMAPI_C_CLOSE,sizeof(MMAPI_C_CLOSE));
         mmapi_free_handlers((*device)->shm,(*device)->hid);
         shmid=(*device)->selfshm;
         shmdt(*device);

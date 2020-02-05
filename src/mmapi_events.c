@@ -15,7 +15,7 @@ mmapi_handler *mmapi_addhandler(mmapi_device *device)
     int i;
     mmapi_handler *hand=shmat(shm,(void*)0,0);
     mmapi_handler *next;
-    if(!hand||hand==~0)return NULL;
+    if(!hand||hand==(void*)~0)return NULL;
 
     hand->id=mmapi_hid++;
     hand->oc=0;
@@ -50,6 +50,15 @@ mmapi_handler *mmapi_addhandler(mmapi_device *device)
     return hand;
 }
 
+int mmapi_remove_handler(mmapi_device *device,int id)
+{
+    if(!device)return -1;
+    if(!device->shm)return -2;
+    mmapi_handler *cur=shmat(device->shm,(void*)0,0);
+    //WIP
+    return 0;
+}
+
 mmapi_event mmapi_wait_handler(mmapi_handler *hand)
 {
     mmapi_event evt=0;
@@ -62,7 +71,7 @@ mmapi_event mmapi_wait_handler(mmapi_handler *hand)
     {
         evt=*((mmapi_event*)&hand->buffer[pos]);
     }
-    strncpy(&hand->buffer[pos],&zero,sizeof(mmapi_event));//Zero the buffer location
+    strncpy(&hand->buffer[pos],(char*)&zero,sizeof(mmapi_event));//Zero the buffer location
     hand->cc++;
     hand->cc%=MMAPI_H_BUFSIZ;
     hand->oc=0;

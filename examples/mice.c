@@ -22,7 +22,7 @@ int main()
         }
         else if(stat&MMAPI_E_SHM)
         {
-            printf("Shared memory error. Zombie memory might be leftover from crash. Clear memory blocks with size %d (devices) and %d (handlers) with ipcs and ipcrm.\n",sizeof(mmapi_device),sizeof(mmapi_handler));
+            printf("Shared memory error. Zombie memory might be leftover from crash. Clear memory blocks with size %ld (devices) and %ld (handlers) with ipcs and ipcrm.\n",sizeof(mmapi_device),sizeof(mmapi_handler));
         }
         return 0;
     }
