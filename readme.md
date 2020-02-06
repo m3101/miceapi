@@ -1,4 +1,4 @@
-# mmapi - Multi-Mouse API
+# miceapi - Multi-Mouse API
 
 An API for abstracting linux devices and making multiple simultaneous mice/pointer handling easier.
 
@@ -13,5 +13,5 @@ By Amélia O. F. da S.
 
 ^_^
 
-[pydocs]: https://github.com/m3101/mmapi/wiki/Python-module-documentation
-[cdocs]: https://github.com/m3101/mmapi/wiki/C-API-Documentation
+[pydocs]: https://github.com/m3101/miceapi/wiki/Python-module-documentation
+[cdocs]: https://github.com/m3101/miceapi/wiki/C-API-Documentation

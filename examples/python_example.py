@@ -1,7 +1,7 @@
 import miceapi
 import re
 
-#This is a simple demonstration of the main mouse-focused features of mmapi
+#This is a simple demonstration of the main mouse-focused features of miceapi
 
 #Copyright (c) 2020 Amélia O. F. da S.
 #Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -36,7 +36,7 @@ for i,device in enumerate(devices):
 #Now we transform each member of mice from
 #   a (string name,string path) tuple
 #   into
-#   a (string name,mmapi.Device(path)) tuple
+#   a (string name,miceapi.Device(path)) tuple
 mice=[(mouse[0],miceapi.Device(mouse[1])) for mouse in mice]
 
 #Now that all the mice are configured, we wait for a click on each one.

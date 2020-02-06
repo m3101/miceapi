@@ -15,8 +15,8 @@ setup(name="miceapi",author="Amélia O. F. da S.",
       description="An API for managing multiple simultaneous mice input on Linux",
       long_description=long_description,
       long_description_content_type='text/markdown',
-      url="https://github.com/m3101/mmapi",
-      version="1.0.3.dev1",
+      url="https://github.com/m3101/miceapi",
+      version="1.0.3.dev4",
       license="MIT",
       classifiers=[
         "Development Status :: 2 - Pre-Alpha",
@@ -30,5 +30,5 @@ setup(name="miceapi",author="Amélia O. F. da S.",
       python_requires='>=3',
       py_modules=["miceapi_async"],
       ext_modules=[Extension("miceapi",
-      ["wrapper.c","../src/mmapi_main.c","../src/mmapi_events.c"])
+      ["wrapper.c","../src/miceapi_main.c","../src/miceapi_events.c"])
       ])

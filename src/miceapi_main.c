@@ -1,5 +1,5 @@
-#include "mmapi_main.h"
-#include "mmapi_events.h"
+#include "miceapi_main.h"
+#include "miceapi_events.h"
 
 /*
 Copyright (c) 2020 Amélia O. F. da S.
@@ -23,35 +23,35 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-void mmapi_bufncpy(void*dest,void*src,int n)
+void miceapi_bufncpy(void*dest,void*src,int n)
 {
     if(!dest||!src||n==0)return;
     int i;
     for(i=0;i<n;i++)((char*)dest)[i]=((char*)src)[i];
 }
 
-int mmapi_deviceid=0;
-int mmapi_create_device(char* path,mmapi_device **device)
+int miceapi_deviceid=0;
+int miceapi_create_device(char* path,miceapi_device **device)
 {
     int ret=0;
-    key_t key=ftok(".",mmapi_deviceid);
-    int shm=shmget(key,sizeof(mmapi_device),IPC_CREAT);
+    key_t key=ftok(".",miceapi_deviceid);
+    int shm=shmget(key,sizeof(miceapi_device),IPC_CREAT);
     (*device)=shmat(shm,(void*)0,0);
-    if(!(*device)||(*device)==(void*)~0)return errno&EINVAL?MMAPI_E_SHM:MMAPI_E_ACCESS|MMAPI_E_SHM;
+    if(!(*device)||(*device)==(void*)~0)return errno&EINVAL?miceapi_E_SHM:miceapi_E_ACCESS|miceapi_E_SHM;
     (*device)->shm=0;
     (*device)->ashm=0;
     (*device)->hid=0;
     (*device)->ahid=0;
-    (*device)->id=mmapi_deviceid++;
+    (*device)->id=miceapi_deviceid++;
     (*device)->selfshm=shm;
-    if((ret=mmapi_start(*device,path))<0)
+    if((ret=miceapi_start(*device,path))<0)
     {
         shmdt(*device);
     }
     return ret;
 }
 
-int mmapi_available_names(char** names,char** paths,int len,int name_size,int path_size)
+int miceapi_available_names(char** names,char** paths,int len,int name_size,int path_size)
 {
     DIR *idev=opendir("/dev/input");
     struct dirent *entry;
@@ -77,34 +77,34 @@ int mmapi_available_names(char** names,char** paths,int len,int name_size,int pa
         closedir(idev);
         return i;
     }
-    else return MMAPI_E_PATH;
+    else return miceapi_E_PATH;
 }
 
-int mmapi_start(mmapi_device *device,char *path)
+int miceapi_start(miceapi_device *device,char *path)
 {
     if(device&&path)
     {
         device->fd=open(path, O_RDONLY|O_NONBLOCK);
         if(device->fd==-1)
         {
-            return errno==EACCES?MMAPI_E_ACCESS|MMAPI_E_PATH:MMAPI_E_PATH;
+            return errno==EACCES?miceapi_E_ACCESS|miceapi_E_PATH:miceapi_E_PATH;
         }
         ioctl(device->fd,EVIOCGNAME(sizeof(device->name)),device->name);
-        return mmapi_start_thread(device);
+        return miceapi_start_thread(device);
     }
     else
-        return MMAPI_E_NULLPOINTER;
+        return miceapi_E_NULLPOINTER;
 }
 
-int mmapi_start_thread(mmapi_device *device)
+int miceapi_start_thread(miceapi_device *device)
 {
     int ppid=getpid();
     int f;
     key_t key=ftok(".",device->id);
 
-    int shm=shmget(key,sizeof(mmapi_device),0);
+    int shm=shmget(key,sizeof(miceapi_device),0);
     device=shmat(shm,(void*)0,0);
-    if(device==(void*)~0||device==(void*)0)return MMAPI_E_SHM;
+    if(device==(void*)~0||device==(void*)0)return miceapi_E_SHM;
 
     f=fork();
     if(f>0)//Main thread
@@ -118,8 +118,8 @@ int mmapi_start_thread(mmapi_device *device)
         diewithparent(ppid)
 
         struct input_event evt;
-        mmapi_handler *curh;
-        mmapi_advhandler *acurh;
+        miceapi_handler *curh;
+        miceapi_advhandler *acurh;
         int nexth;
         while(device)
         {
@@ -128,18 +128,18 @@ int mmapi_start_thread(mmapi_device *device)
                 if(evt.type==0)continue;
                 if(device->shm)
                 {
-                    mmapi_event decoded=mmapi_decode(device,&evt);
+                    miceapi_event decoded=miceapi_decode(device,&evt);
                     if(decoded==0)continue;
                     curh=shmat(device->shm,(void*)0,0);
-                    mmapi_bufncpy(&curh->buffer[(curh->ec++)*sizeof(mmapi_event)],(char*)&decoded,sizeof(mmapi_event));
-                    curh->ec%=MMAPI_H_BUFSIZ;
+                    miceapi_bufncpy(&curh->buffer[(curh->ec++)*sizeof(miceapi_event)],(char*)&decoded,sizeof(miceapi_event));
+                    curh->ec%=miceapi_H_BUFSIZ;
                     nexth=curh->next;
                     while(nexth)
                     {
                         shmdt(curh);
                         curh=shmat(nexth,(void*)0,0);
-                        mmapi_bufncpy(&curh->buffer[(curh->ec++)*sizeof(mmapi_event)],(char*)&decoded,sizeof(mmapi_event));
-                        curh->ec%=MMAPI_H_BUFSIZ;
+                        miceapi_bufncpy(&curh->buffer[(curh->ec++)*sizeof(miceapi_event)],(char*)&decoded,sizeof(miceapi_event));
+                        curh->ec%=miceapi_H_BUFSIZ;
                         nexth=curh->next;
                     }
                     shmdt(curh);
@@ -147,15 +147,15 @@ int mmapi_start_thread(mmapi_device *device)
                 if(device->ashm)
                 {
                     acurh=shmat(device->ashm,(void*)0,0);
-                    mmapi_bufncpy(&acurh->buffer[(acurh->ec++)*sizeof(struct input_event)],(char*)&evt,sizeof(struct input_event));
-                    acurh->ec%=MMAPI_H_BUFSIZ;
+                    miceapi_bufncpy(&acurh->buffer[(acurh->ec++)*sizeof(struct input_event)],(char*)&evt,sizeof(struct input_event));
+                    acurh->ec%=miceapi_H_BUFSIZ;
                     nexth=acurh->next;
                     while(nexth)
                     {
                         shmdt(acurh);
                         acurh=shmat(nexth,(void*)0,0);
-                        mmapi_bufncpy(&acurh->buffer[(acurh->ec++)*sizeof(struct input_event)],(char*)&evt,sizeof(struct input_event));
-                        acurh->ec%=MMAPI_H_BUFSIZ;
+                        miceapi_bufncpy(&acurh->buffer[(acurh->ec++)*sizeof(struct input_event)],(char*)&evt,sizeof(struct input_event));
+                        acurh->ec%=miceapi_H_BUFSIZ;
                         nexth=acurh->next;
                     }
                     shmdt(acurh);
@@ -165,12 +165,12 @@ int mmapi_start_thread(mmapi_device *device)
         return 0;
     }
 }
-//little endian, last 16 bits are from code, 17th is set to 1 (MMAPI_OTHER), next 15 are from value
-//That is: event = [15bits-value|1bit-MMAPI_OTHER flag|16bits-code](little endian)
+//little endian, last 16 bits are from code, 17th is set to 1 (miceapi_OTHER), next 15 are from value
+//That is: event = [15bits-value|1bit-miceapi_OTHER flag|16bits-code](little endian)
 #define _packevt(evt)    (evt->value<<(32-15))|\
-                        MMAPI_OTHER|\
+                        miceapi_OTHER|\
                         (evt->code)
-mmapi_event mmapi_decode(mmapi_device *device,struct input_event *evt)
+miceapi_event miceapi_decode(miceapi_device *device,struct input_event *evt)
 {
     int diff;//For tracking trackpad movements
     //These values were experimentally determined. Sorry.
@@ -182,23 +182,23 @@ mmapi_event mmapi_decode(mmapi_device *device,struct input_event *evt)
             {
                 case 272://Left mouse button
                     if(evt->value)
-                        return MMAPI_LCLICKDOWN;
-                    else return MMAPI_LCLICKUP;
+                        return miceapi_LCLICKDOWN;
+                    else return miceapi_LCLICKUP;
                     break;
                 case 273://Right mouse button
                     if(evt->value)
-                        return MMAPI_RCLICKDOWN;
-                    else return MMAPI_RCLICKUP;
+                        return miceapi_RCLICKDOWN;
+                    else return miceapi_RCLICKUP;
                     break;
                 case 274://Middle mouse button
                     if(evt->value)
-                        return MMAPI_MCLICKDOWN;
-                    else return MMAPI_MCLICKUP;
+                        return miceapi_MCLICKDOWN;
+                    else return miceapi_MCLICKUP;
                     break;
                 case 330://Touchpad click start
                     if(evt->value)
-                        return MMAPI_LCLICKDOWN;
-                    else return MMAPI_LCLICKUP;
+                        return miceapi_LCLICKDOWN;
+                    else return miceapi_LCLICKUP;
                     break;
                 default://Keyboard event
                     return _packevt(evt);
@@ -210,18 +210,18 @@ mmapi_event mmapi_decode(mmapi_device *device,struct input_event *evt)
             {
             case 0://Horizontal movement
                 if(evt->value>0)
-                    return MMAPI_MOUSEMRIGHT;
-                else if(evt->value<0)return MMAPI_MOUSEMLEFT;
+                    return miceapi_MOUSEMRIGHT;
+                else if(evt->value<0)return miceapi_MOUSEMLEFT;
                 break;
             case 1://Vertical movement
                 if(evt->value<0)
-                    return MMAPI_MOUSEMUP;
-                else if(evt->value>0)return MMAPI_MOUSEMDOWN;
+                    return miceapi_MOUSEMUP;
+                else if(evt->value>0)return miceapi_MOUSEMDOWN;
                 break;
             case 8://Scrolling
                 if(evt->value>0)
-                    return MMAPI_SCROLLUP;
-                else return MMAPI_SCROLLDOWN;
+                    return miceapi_SCROLLUP;
+                else return miceapi_SCROLLDOWN;
             }
             break;
         case 3://Setting x/y (for trackpads only)
@@ -230,16 +230,16 @@ mmapi_event mmapi_decode(mmapi_device *device,struct input_event *evt)
             case 53://x
                 diff=evt->value-device->x;
                 device->x=evt->value;
-                if(diff>0) return MMAPI_MOUSEMRIGHT|MMAPI_UPDATEPOS;
-                else if(diff<0) return MMAPI_MOUSEMLEFT|MMAPI_UPDATEPOS;
-                else return MMAPI_UPDATEPOS;
+                if(diff>0) return miceapi_MOUSEMRIGHT|miceapi_UPDATEPOS;
+                else if(diff<0) return miceapi_MOUSEMLEFT|miceapi_UPDATEPOS;
+                else return miceapi_UPDATEPOS;
                 break;
             case 54://y
                 diff=evt->value-device->y;
                 device->y=evt->value;
-                if(diff>0) return MMAPI_MOUSEMDOWN|MMAPI_UPDATEPOS;
-                else if(diff<0) return MMAPI_MOUSEMUP|MMAPI_UPDATEPOS;
-                else return MMAPI_UPDATEPOS;
+                if(diff>0) return miceapi_MOUSEMDOWN|miceapi_UPDATEPOS;
+                else if(diff<0) return miceapi_MOUSEMUP|miceapi_UPDATEPOS;
+                else return miceapi_UPDATEPOS;
                 break;
             }
             break;
@@ -247,13 +247,13 @@ mmapi_event mmapi_decode(mmapi_device *device,struct input_event *evt)
     return 0;
 }
 
-int mmapi_free_device(mmapi_device **device)
+int miceapi_free_device(miceapi_device **device)
 {
     int shmid;
     if(device&&*device)
     {
-        mmapi_free_handlers((*device)->shm,(*device)->hid);
-        mmapi_free_advhandlers((*device)->ashm,(*device)->ahid);
+        miceapi_free_handlers((*device)->shm,(*device)->hid);
+        miceapi_free_advhandlers((*device)->ashm,(*device)->ahid);
         shmid=(*device)->selfshm;
         shmdt(*device);
         shmctl(shmid,IPC_RMID,0);

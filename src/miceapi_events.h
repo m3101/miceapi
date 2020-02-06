@@ -1,8 +1,8 @@
-#ifndef MMAPI_EVENTS
-#define MMAPI_EVENTS
+#ifndef miceapi_EVENTS
+#define miceapi_EVENTS
 
-#ifndef MMAPI_MAIN
-#include "mmapi_main.h"
+#ifndef miceapi_MAIN
+#include "miceapi_main.h"
 #endif
 
 /*
@@ -28,18 +28,18 @@ SOFTWARE.
 */
 
 //Shared memory id initial number
-#define MMAPI_H_SHMID 20
+#define miceapi_H_SHMID 20
 
 //Handler types
-#define MMAPI_H_DEC 01//Decoded (mouse and trackpad) handler
-#define MMAPI_H_RAW 02//Raw handler
+#define miceapi_H_DEC 01//Decoded (mouse and trackpad) handler
+#define miceapi_H_RAW 02//Raw handler
 
 //Constants
-#define MMAPI_H_BUFSIZ 8
+#define miceapi_H_BUFSIZ 8
 
 //Represents a thread waiting for device events
-typedef struct _mmapi_handler {
-    char buffer[sizeof(mmapi_event)*MMAPI_H_BUFSIZ];//Command buffer
+typedef struct _miceapi_handler {
+    char buffer[sizeof(miceapi_event)*miceapi_H_BUFSIZ];//Command buffer
     int cc;//Current command position on buffer
     int ec;//Last command position on buffer
     unsigned int id;
@@ -48,11 +48,11 @@ typedef struct _mmapi_handler {
     int next;//Next handler shmid
     int nid;//Next handler id for shm key generation
     char oc;//Occupied
-} mmapi_handler;
+} miceapi_handler;
 
 //Represents a thread waiting for raw device events
-typedef struct _mmapi_advhandler {
-    char buffer[sizeof(struct input_event)*MMAPI_H_BUFSIZ];//Command buffer
+typedef struct _miceapi_advhandler {
+    char buffer[sizeof(struct input_event)*miceapi_H_BUFSIZ];//Command buffer
     int cc;//Current command position on buffer
     int ec;//Last command position on buffer
     unsigned int id;
@@ -61,42 +61,42 @@ typedef struct _mmapi_advhandler {
     int next;//Next handler shmid
     int nid;//Next handler id for shm key generation
     char oc;//Occupied
-} mmapi_advhandler;
+} miceapi_advhandler;
 
 /*
-    Adds a handler to <mmapi_device *device>'s stack.
+    Adds a handler to <miceapi_device *device>'s stack.
     Returns the handler object.
 */
-mmapi_handler *mmapi_addhandler(mmapi_device *device);
+miceapi_handler *miceapi_addhandler(miceapi_device *device);
 /*
-    Adds an advanced (raw) handler to <mmapi_device *device>'s stack.
+    Adds an advanced (raw) handler to <miceapi_device *device>'s stack.
     Returns the adv_handler object.
 */
-mmapi_advhandler *mmapi_addadvhandler(mmapi_device *device);
+miceapi_advhandler *miceapi_addadvhandler(miceapi_device *device);
 /*
-    Detaches the handler with id <int id> from device <mmapi_device *device>
+    Detaches the handler with id <int id> from device <miceapi_device *device>
 */
-int mmapi_remove_handler(mmapi_device *device,unsigned int id);
+int miceapi_remove_handler(miceapi_device *device,unsigned int id);
 /*
-    Detaches the raw handler with id <int id> from device <mmapi_device *device>
+    Detaches the raw handler with id <int id> from device <miceapi_device *device>
 */
-int mmapi_remove_advhandler(mmapi_device *device,unsigned int id);
+int miceapi_remove_advhandler(miceapi_device *device,unsigned int id);
 /*
-    Waits for an answer at handler <mmapi_handler *hand>.
+    Waits for an answer at handler <miceapi_handler *hand>.
     (Pre-decoded)
 */
-mmapi_event mmapi_wait_handler(mmapi_handler *hand);
+miceapi_event miceapi_wait_handler(miceapi_handler *hand);
 /*
-    Waits for an answer at handler <mmapi_advhandler *hand>.
+    Waits for an answer at handler <miceapi_advhandler *hand>.
     (Raw)
 */
-struct input_event mmapi_wait_advhandler(mmapi_advhandler *hand);
+struct input_event miceapi_wait_advhandler(miceapi_advhandler *hand);
 /*
     Internal function. Recursively frees handlers
 */
-int mmapi_free_handlers(int handler,unsigned int hid);
+int miceapi_free_handlers(int handler,unsigned int hid);
 /*
     Internal function. Recursively frees raw handlers
 */
-int mmapi_free_advhandlers(int handler,unsigned int hid);
+int miceapi_free_advhandlers(int handler,unsigned int hid);
 #endif

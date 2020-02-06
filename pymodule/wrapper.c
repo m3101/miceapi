@@ -1,7 +1,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <python3.7m/Python.h>
-#include "../src/mmapi_main.h"
-#include "../src/mmapi_events.h"
+#include "../src/miceapi_main.h"
+#include "../src/miceapi_events.h"
 
 /*
 Copyright (c) 2020 Amélia O. F. da S.
@@ -26,12 +26,12 @@ SOFTWARE.
 */
 
 /*
-####mmapi.listDevices
+####miceapi.listDevices
     Returns a list of the first 64 devices' names and paths
     [(name,path),...]
 */
 static PyObject *
-mmapi_listDevices(PyObject *self, PyObject *args)
+miceapi_listDevices(PyObject *self, PyObject *args)
 {
     char *paths[64];
     char *names[64];
@@ -42,7 +42,7 @@ mmapi_listDevices(PyObject *self, PyObject *args)
     fd=open("/dev/input/event0",O_NONBLOCK|O_RDONLY);
     if(fd<=0)
     {
-        PyErr_SetString(PyExc_OSError,"mmapi could not open device files at /dev/input. (Check access permissions)");
+        PyErr_SetString(PyExc_OSError,"miceapi could not open device files at /dev/input. (Check access permissions)");
         return NULL;
     }
     close(fd);
@@ -51,7 +51,7 @@ mmapi_listDevices(PyObject *self, PyObject *args)
         paths[i]=malloc(256*sizeof(char));
         names[i]=malloc(256*sizeof(char));
     }
-    devices=mmapi_available_names(names,paths,64,256,256);
+    devices=miceapi_available_names(names,paths,64,256,256);
     ret=(PyListObject*)PyList_New((Py_ssize_t) devices);
     if(!ret)
     {
@@ -76,19 +76,19 @@ mmapi_listDevices(PyObject *self, PyObject *args)
 }
 
 /*
-####mmapi.Device
-    An abstraction of the C MMAPI mmapi_device and mmapi_handler
+####miceapi.Device
+    An abstraction of the C miceapi miceapi_device and miceapi_handler
 */
 
 typedef struct {
     PyObject_HEAD
-    mmapi_device *ob_devobj;
+    miceapi_device *ob_devobj;
 } deviceObject;
 
 static void
 device_dealloc(deviceObject *self)
 {
-    mmapi_free_device(&self->ob_devobj);
+    miceapi_free_device(&self->ob_devobj);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
@@ -109,22 +109,22 @@ device_init(deviceObject *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s", kwlist,
                                      &path))
     {
-        PyErr_SetString(PyExc_SyntaxError,"mmapi.Device exiges a \"path\" argument");
+        PyErr_SetString(PyExc_SyntaxError,"miceapi.Device exiges a \"path\" argument");
         return -1;
     }
-    if((err=mmapi_create_device(path,&self->ob_devobj)))
+    if((err=miceapi_create_device(path,&self->ob_devobj)))
     {
-        if(err&MMAPI_E_PATH)
+        if(err&miceapi_E_PATH)
         {
-            if(err&MMAPI_E_ACCESS)
-                PyErr_SetString(PyExc_SystemError,"mmapi could not access path (access forbidden).");
+            if(err&miceapi_E_ACCESS)
+                PyErr_SetString(PyExc_SystemError,"miceapi could not access path (access forbidden).");
             else
-                PyErr_SetString(PyExc_SyntaxError,"mmapi could not access path.");
+                PyErr_SetString(PyExc_SyntaxError,"miceapi could not access path.");
         }
-        else if(err&MMAPI_E_SHM)
+        else if(err&miceapi_E_SHM)
         {
-            if(err&MMAPI_E_ACCESS)
-                PyErr_SetString(PyExc_SyntaxError,"mmapi wasn't authorized to access shared memory. Check permissions.");
+            if(err&miceapi_E_ACCESS)
+                PyErr_SetString(PyExc_SyntaxError,"miceapi wasn't authorized to access shared memory. Check permissions.");
             else
                 PyErr_SetString(PyExc_SyntaxError,"Shared memory error. Zombie memory might be leftover from crash. Clear memory blocks with ipcs and ipcrm.\n");
         }
@@ -156,27 +156,27 @@ device_wait_move(deviceObject *self, PyObject *args)
         PyErr_SetString(PyExc_RuntimeError,"device object hasn't been properly instantiated");
         return NULL;
     }
-    mmapi_handler *movehandler=mmapi_addhandler(self->ob_devobj);
+    miceapi_handler *movehandler=miceapi_addhandler(self->ob_devobj);
     if(!movehandler)
     {
         PyErr_SetString(PyExc_RuntimeError,"couldn't attach handler object. Maybe shared memory is full?");
         return NULL;
     }
-    mmapi_event evt=0;
-    while(!(evt&MMAPI_MOVEMENT))evt=mmapi_wait_handler(movehandler);
-    mmapi_remove_handler(self->ob_devobj,movehandler->id);
-    switch (evt&MMAPI_MOVEMENT)
+    miceapi_event evt=0;
+    while(!(evt&miceapi_MOVEMENT))evt=miceapi_wait_handler(movehandler);
+    miceapi_remove_handler(self->ob_devobj,movehandler->id);
+    switch (evt&miceapi_MOVEMENT)
     {
-        case MMAPI_MOUSEMDOWN:
+        case miceapi_MOUSEMDOWN:
             return _PyUnicode_FromASCII("down",4);
             break;
-        case MMAPI_MOUSEMUP:
+        case miceapi_MOUSEMUP:
             return _PyUnicode_FromASCII("up",2);
             break;
-        case MMAPI_MOUSEMLEFT:
+        case miceapi_MOUSEMLEFT:
             return _PyUnicode_FromASCII("left",4);
             break;
-        case MMAPI_MOUSEMRIGHT:
+        case miceapi_MOUSEMRIGHT:
             return _PyUnicode_FromASCII("right",5);
             break;
     }
@@ -202,29 +202,29 @@ device_wait_mousedown(deviceObject *self, PyObject *args, PyObject *kwds)
         PyErr_SetString(PyExc_RuntimeError,"device object hasn't been properly instantiated");
         return NULL;
     }
-    mmapi_handler *clickhandler=mmapi_addhandler(self->ob_devobj);
+    miceapi_handler *clickhandler=miceapi_addhandler(self->ob_devobj);
     if(!clickhandler)
     {
         PyErr_SetString(PyExc_RuntimeError,"couldn't attach handler object. Maybe shared memory is full?");
         return NULL;
     }
-    mmapi_event evt=0;
+    miceapi_event evt=0;
     while(!(
-            (left&&(evt&MMAPI_LCLICKDOWN))||
-            (mid&&(evt&MMAPI_MCLICKDOWN))||
-            (right&&(evt&MMAPI_RCLICKDOWN))
+            (left&&(evt&miceapi_LCLICKDOWN))||
+            (mid&&(evt&miceapi_MCLICKDOWN))||
+            (right&&(evt&miceapi_RCLICKDOWN))
         )){
-        evt=mmapi_wait_handler(clickhandler);}
-    mmapi_remove_handler(self->ob_devobj,clickhandler->id);
-    switch (evt&MMAPI_CLICKDOWN)
+        evt=miceapi_wait_handler(clickhandler);}
+    miceapi_remove_handler(self->ob_devobj,clickhandler->id);
+    switch (evt&miceapi_CLICKDOWN)
     {
-    case MMAPI_LCLICKDOWN:
+    case miceapi_LCLICKDOWN:
         return _PyUnicode_FromASCII("left",4);
         break;
-    case MMAPI_MCLICKDOWN:
+    case miceapi_MCLICKDOWN:
         return _PyUnicode_FromASCII("mid",3);
         break;
-    case MMAPI_RCLICKDOWN:
+    case miceapi_RCLICKDOWN:
         return _PyUnicode_FromASCII("right",5);
         break;
     default:
@@ -251,29 +251,29 @@ device_wait_mouseup(deviceObject *self, PyObject *args, PyObject *kwds)
         PyErr_SetString(PyExc_RuntimeError,"device object hasn't been properly instantiated");
         return NULL;
     }
-    mmapi_handler *clickhandler=mmapi_addhandler(self->ob_devobj);
+    miceapi_handler *clickhandler=miceapi_addhandler(self->ob_devobj);
     if(!clickhandler)
     {
         PyErr_SetString(PyExc_RuntimeError,"couldn't attach handler object. Maybe shared memory is full?");
         return NULL;
     }
-    mmapi_event evt=0;
+    miceapi_event evt=0;
     while(!(
-            (left&&(evt&MMAPI_LCLICKUP))||
-            (mid&&(evt&MMAPI_MCLICKUP))||
-            (right&&(evt&MMAPI_RCLICKUP))
+            (left&&(evt&miceapi_LCLICKUP))||
+            (mid&&(evt&miceapi_MCLICKUP))||
+            (right&&(evt&miceapi_RCLICKUP))
         ))
-        evt=mmapi_wait_handler(clickhandler);
-    mmapi_remove_handler(self->ob_devobj,clickhandler->id);
-    switch (evt&MMAPI_CLICKUP)
+        evt=miceapi_wait_handler(clickhandler);
+    miceapi_remove_handler(self->ob_devobj,clickhandler->id);
+    switch (evt&miceapi_CLICKUP)
     {
-    case MMAPI_LCLICKUP:
+    case miceapi_LCLICKUP:
         return _PyUnicode_FromASCII("left",4);
         break;
-    case MMAPI_MCLICKUP:
+    case miceapi_MCLICKUP:
         return _PyUnicode_FromASCII("mid",3);
         break;
-    case MMAPI_RCLICKUP:
+    case miceapi_RCLICKUP:
         return _PyUnicode_FromASCII("right",5);
         break;
     default:
@@ -290,21 +290,21 @@ device_wait_scroll(deviceObject *self, PyObject *args)
         PyErr_SetString(PyExc_RuntimeError,"device object hasn't been properly instantiated");
         return NULL;
     }
-    mmapi_handler *scrollhandler=mmapi_addhandler(self->ob_devobj);
+    miceapi_handler *scrollhandler=miceapi_addhandler(self->ob_devobj);
     if(!scrollhandler)
     {
         PyErr_SetString(PyExc_RuntimeError,"couldn't attach handler object. Maybe shared memory is full?");
         return NULL;
     }
-    mmapi_event evt=0;
-    while(!(evt&MMAPI_SCROLL))evt=mmapi_wait_handler(scrollhandler);
-    mmapi_remove_handler(self->ob_devobj,scrollhandler->id);
-    switch (evt&MMAPI_SCROLL)
+    miceapi_event evt=0;
+    while(!(evt&miceapi_SCROLL))evt=miceapi_wait_handler(scrollhandler);
+    miceapi_remove_handler(self->ob_devobj,scrollhandler->id);
+    switch (evt&miceapi_SCROLL)
     {
-        case MMAPI_SCROLLUP:
+        case miceapi_SCROLLUP:
             return _PyUnicode_FromASCII("up",4);
             break;
-        case MMAPI_SCROLLDOWN:
+        case miceapi_SCROLLDOWN:
             return _PyUnicode_FromASCII("down",2);
             break;
     }
@@ -321,8 +321,8 @@ static PyMethodDef device_methods[] = {
 
 static PyTypeObject deviceType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "mmapi.Device",
-    .tp_doc = "mmapi device object",
+    .tp_name = "miceapi.Device",
+    .tp_doc = "miceapi device object",
     .tp_basicsize = sizeof(deviceObject),
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
@@ -333,31 +333,31 @@ static PyTypeObject deviceType = {
 };
 
 /*
-####mmapi
+####miceapi
     Module definitions
 */
 
-static PyMethodDef mmapiMethods[] = {
-    {"listDevices",mmapi_listDevices,METH_NOARGS,
+static PyMethodDef miceapiMethods[] = {
+    {"listDevices",miceapi_listDevices,METH_NOARGS,
     "List available device names and paths (list of tuples (name,path))"},
     {NULL, NULL, 0, NULL}
 };
 
-static PyModuleDef mmapimodule = {
+static PyModuleDef miceapimodule = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "mmapi",
+    .m_name = "miceapi",
     .m_doc = "A module for managing multiple simultaneous pointer device input on linux environments.",
     .m_size = -1,
-    .m_methods = mmapiMethods,
+    .m_methods = miceapiMethods,
 };
 
-PyMODINIT_FUNC PyInit_mmapi(void)
+PyMODINIT_FUNC PyInit_miceapi(void)
 {
     PyObject *m;
     if (PyType_Ready(&deviceType) < 0)
         return NULL;
 
-    m = PyModule_Create(&mmapimodule);
+    m = PyModule_Create(&miceapimodule);
     if (m == NULL)
         return NULL;
 

@@ -1,5 +1,5 @@
-#include "../src/mmapi_main.h"
-#include "../src/mmapi_events.h"
+#include "../src/miceapi_main.h"
+#include "../src/miceapi_events.h"
 #include <stdio.h>
 
 //Copyright (c) 2020 Amélia O. F. da S.
@@ -11,30 +11,30 @@ It tracks the device at event5 (change it to one of your pointer devices)
 
 int main()
 {
-    mmapi_device *mouse;
-    unsigned int stat=mmapi_create_device("/dev/input/event5",&mouse);//event5 happened to be my mouse. Use names.c to find the available devices.
-    mmapi_handler *clickwaiter;
-    mmapi_handler *movetracker;
-    mmapi_event evt;
+    miceapi_device *mouse;
+    unsigned int stat=miceapi_create_device("/dev/input/event5",&mouse);//event5 happened to be my mouse. Use names.c to find the available devices.
+    miceapi_handler *clickwaiter;
+    miceapi_handler *movetracker;
+    miceapi_event evt;
     int waitid;
     if(stat!=0)
     {
         printf("mice.c: could not create device (errno %d). ", errno);
-        if(stat&MMAPI_E_ACCESS)
+        if(stat&miceapi_E_ACCESS)
         {
-            if(stat&MMAPI_E_SHM) printf("Not authorized to use Shared Memory. Check permissions.\n");
+            if(stat&miceapi_E_SHM) printf("Not authorized to use Shared Memory. Check permissions.\n");
             else printf("Not authorized to access device files. Check permissions.\n");
         }
-        else if(stat&MMAPI_E_SHM)
+        else if(stat&miceapi_E_SHM)
         {
-            printf("Shared memory error. Zombie memory might be leftover from crash. Clear memory blocks with size %ld (devices) and %ld (handlers) with ipcs and ipcrm.\n",sizeof(mmapi_device),sizeof(mmapi_handler));
+            printf("Shared memory error. Zombie memory might be leftover from crash. Clear memory blocks with size %ld (devices) and %ld (handlers) with ipcs and ipcrm.\n",sizeof(miceapi_device),sizeof(miceapi_handler));
         }
         return 0;
     }
     printf("Devices created.\n");
     printf("Mouse name is %s\n",mouse->name);
-    clickwaiter=mmapi_addhandler(mouse);
-    movetracker=mmapi_addhandler(mouse);
+    clickwaiter=miceapi_addhandler(mouse);
+    movetracker=miceapi_addhandler(mouse);
     if(!clickwaiter||!movetracker)
     {
         printf("Could not create handler. Error: %d.\n",errno);
@@ -53,22 +53,22 @@ int main()
         printf("Side thread started.\n");
         while(1)
         {
-            evt=mmapi_wait_handler(movetracker);
-            switch (evt&MMAPI_MOVEMENT)
+            evt=miceapi_wait_handler(movetracker);
+            switch (evt&miceapi_MOVEMENT)
             {
-                case MMAPI_MOUSEMDOWN:
+                case miceapi_MOUSEMDOWN:
                     printf("V\r");
                     fflush(stdout);
                     break;
-                case MMAPI_MOUSEMUP:
+                case miceapi_MOUSEMUP:
                     printf("^\r");
                     fflush(stdout);
                     break;
-                case MMAPI_MOUSEMLEFT:
+                case miceapi_MOUSEMLEFT:
                     printf("<\r");
                     fflush(stdout);
                     break;
-                case MMAPI_MOUSEMRIGHT:
+                case miceapi_MOUSEMRIGHT:
                     printf(">\r");
                     fflush(stdout);
                     break;
@@ -79,11 +79,11 @@ int main()
     //This thread, the main thread, will wait for a mouse click to die
     evt=0;
     printf("Main thread waiting for click...\n");
-    while(!(evt&MMAPI_LCLICKUP))
+    while(!(evt&miceapi_LCLICKUP))
     {
-        evt=mmapi_wait_handler(clickwaiter);
+        evt=miceapi_wait_handler(clickwaiter);
     }
     printf("Closing everything...\n");
-    mmapi_free_device(&mouse);
+    miceapi_free_device(&mouse);
     return 0;
 }

@@ -1,10 +1,10 @@
-#include "../src/mmapi_main.h"
+#include "../src/miceapi_main.h"
 #include <stdio.h>
 
 //Copyright (c) 2020 Amélia O. F. da S.
 
 /*
-Demonstrates a possible use for mmapi_device_names
+Demonstrates a possible use for miceapi_device_names
 */
 
 int main()
@@ -23,7 +23,7 @@ int main()
         paths[i]=malloc(256*sizeof(char));
         names[i]=malloc(256*sizeof(char));
     }
-    devices=mmapi_available_names(names,paths,32,256,256);
+    devices=miceapi_available_names(names,paths,32,256,256);
     for(i=0;i<devices;i++)printf("Device %s at %s\n",names[i],paths[i]);
     for(i=0;i<32;i++)
     {

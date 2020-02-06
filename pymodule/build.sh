@@ -1,5 +1,5 @@
-rm -rf build
-rm -rf dist
+sudo rm -rf build
+sudo rm -rf dist
 echo "Generating python wheels..."
 python3 setup.py bdist_wheel
 echo "Converting wheels to manylinux..."

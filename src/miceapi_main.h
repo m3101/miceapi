@@ -1,8 +1,8 @@
 #ifndef _GNU_SOURCE
     #define _GNU_SOURCE
 #endif
-#ifndef MMAPI_MAIN
-#define MMAPI_MAIN
+#ifndef miceapi_MAIN
+#define miceapi_MAIN
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -43,41 +43,41 @@ SOFTWARE.
 */
 
 //Pipe command flags
-#define MMAPI_C_CLOSE 01
+#define miceapi_C_CLOSE 01
 
 //Device error flags
-#define MMAPI_E_NULLPOINTER 01 //Pointers that shouldn't be null are null (check arguments)
-#define MMAPI_E_PIPE 02 //Pipe opening error
-#define MMAPI_E_PATH 04 //Refers to errors when opening files (not strictly related to wrong paths)
-#define MMAPI_E_SHM 010 //Refers to errors related to SHM
-#define MMAPI_E_ACCESS 020 //Refers to errors related to access authorization (files and shm)
+#define miceapi_E_NULLPOINTER 01 //Pointers that shouldn't be null are null (check arguments)
+#define miceapi_E_PIPE 02 //Pipe opening error
+#define miceapi_E_PATH 04 //Refers to errors when opening files (not strictly related to wrong paths)
+#define miceapi_E_SHM 010 //Refers to errors related to SHM
+#define miceapi_E_ACCESS 020 //Refers to errors related to access authorization (files and shm)
 
 //Event codes
-#define MMAPI_MOUSEMUP 01
-#define MMAPI_MOUSEMDOWN 02
-#define MMAPI_MOUSEMRIGHT 04
-#define MMAPI_MOUSEMLEFT 010
-#define MMAPI_LCLICKDOWN 020
-#define MMAPI_LCLICKUP 040
-#define MMAPI_RCLICKDOWN 0100
-#define MMAPI_RCLICKUP 0200
-#define MMAPI_MCLICKDOWN 0400
-#define MMAPI_MCLICKUP 01000
-#define MMAPI_SCROLLUP 02000
-#define MMAPI_SCROLLDOWN 04000
-#define MMAPI_UPDATEPOS 010000
-#define MMAPI_OTHER 0200000 //For keyboard events, for example
+#define miceapi_MOUSEMUP 01
+#define miceapi_MOUSEMDOWN 02
+#define miceapi_MOUSEMRIGHT 04
+#define miceapi_MOUSEMLEFT 010
+#define miceapi_LCLICKDOWN 020
+#define miceapi_LCLICKUP 040
+#define miceapi_RCLICKDOWN 0100
+#define miceapi_RCLICKUP 0200
+#define miceapi_MCLICKDOWN 0400
+#define miceapi_MCLICKUP 01000
+#define miceapi_SCROLLUP 02000
+#define miceapi_SCROLLDOWN 04000
+#define miceapi_UPDATEPOS 010000
+#define miceapi_OTHER 0200000 //For keyboard events, for example
 
 //Event combination codes
-#define MMAPI_MOVEMENT 017
-#define MMAPI_CLICKDOWN 0520
-#define MMAPI_CLICKUP 01240
-#define MMAPI_SCROLL 03000
+#define miceapi_MOVEMENT 017
+#define miceapi_CLICKDOWN 0520
+#define miceapi_CLICKUP 01240
+#define miceapi_SCROLL 03000
 
 /*
-    A macro for unpacking mmapi_event objects into a code(16bit) and a value(15bit)
+    A macro for unpacking miceapi_event objects into a code(16bit) and a value(15bit)
 */
-#define mmapi_unpackevt(event,uint16_code,int_value)\
+#define miceapi_unpackevt(event,uint16_code,int_value)\
                         uint16_code=(event<<((sizeof(event)*8)-16))>>((sizeof(event)*8)-16));\
                         int_value=event>>17;
 
@@ -92,7 +92,7 @@ SOFTWARE.
     A structure to abstract the pipe layout and file descriptors
     (Less useful now, but important nonetheless)
 */
-typedef struct _mmapi_device{
+typedef struct _miceapi_device{
     int fd; //File descriptor 
     char name[256];
     int x;//For trackpads only
@@ -103,40 +103,40 @@ typedef struct _mmapi_device{
     int ahid;//For the raw event handler
     int selfshm;//For freeing shm later on
     int id;//For creating the shm key
-} mmapi_device;
+} miceapi_device;
 //A type to abstract input_events
-typedef unsigned int mmapi_event;
+typedef unsigned int miceapi_event;
 
 /*
     Creates and starts monitoring a new device at <char* path>
 */
-int mmapi_create_device(char* path,mmapi_device **device);
+int miceapi_create_device(char* path,miceapi_device **device);
 /*
     Lists the <int len> first available device names up to <int name_size> characters
     in <char** names> and their paths up to <int path_size> characters at <char** paths>
 */
-int mmapi_available_names(char** names,char** paths,int len,int name_size,int path_size);
+int miceapi_available_names(char** names,char** paths,int len,int name_size,int path_size);
 /*
     Internal function. Prepares the monitoring environment.
 */
-int mmapi_start(mmapi_device *device,char *path);
+int miceapi_start(miceapi_device *device,char *path);
 /*
     Internal function. Starts the monitoring thread.
 */
-int mmapi_start_thread(mmapi_device *device);
+int miceapi_start_thread(miceapi_device *device);
 /*
-    Decodes an <input_event *evt> to the simpler mmapi_event format.
-    Needs a <mmapi_device *device> for calculating movement with trackpads.
+    Decodes an <input_event *evt> to the simpler miceapi_event format.
+    Needs a <miceapi_device *device> for calculating movement with trackpads.
 */
-mmapi_event mmapi_decode(mmapi_device *device,struct input_event *evt);
+miceapi_event miceapi_decode(miceapi_device *device,struct input_event *evt);
 /*
     Frees a device.
 */
-int mmapi_free_device(mmapi_device **device);
+int miceapi_free_device(miceapi_device **device);
 
 /*
     Internal function. It works as a strncpy that copies exactly n bytes (regardless of null termination)
 */
-void mmapi_bufncpy(void*dest,void*src,int n);
+void miceapi_bufncpy(void*dest,void*src,int n);
 
 #endif
