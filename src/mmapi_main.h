@@ -77,7 +77,6 @@ SOFTWARE.
 /*
     A macro for unpacking mmapi_event objects into a code(16bit) and a value(15bit)
 */
-//That is: event = [15bits-value|1bit-MMAPI_OTHER flag|16bits-code](little endian)
 #define mmapi_unpackevt(event,uint16_code,int_value)\
                         uint16_code=(event<<((sizeof(event)*8)-16))>>((sizeof(event)*8)-16));\
                         int_value=event>>17;

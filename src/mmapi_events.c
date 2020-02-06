@@ -122,7 +122,7 @@ mmapi_advhandler *mmapi_addadvhandler(mmapi_device *device)
     return hand;
 }
 
-int mmapi_remove_handler(mmapi_device *device,int id)
+int mmapi_remove_handler(mmapi_device *device,unsigned int id)
 {
     int shmid;
     if(!device)return -1;
@@ -156,7 +156,7 @@ int mmapi_remove_handler(mmapi_device *device,int id)
     return 0;
 }
 
-int mmapi_remove_advhandler(mmapi_device *device,int id)
+int mmapi_remove_advhandler(mmapi_device *device,unsigned int id)
 {
     int shmid;
     if(!device)return -1;
@@ -240,7 +240,7 @@ struct input_event mmapi_wait_advhandler(mmapi_advhandler *hand)
     return evt;
 }
 
-int mmapi_free_handlers(int handler,int hid)
+int mmapi_free_handlers(int handler,unsigned int hid)
 {
     mmapi_handler *hand;
     if(handler)
@@ -259,7 +259,7 @@ int mmapi_free_handlers(int handler,int hid)
     return 0;
 }
 
-int mmapi_free_advhandlers(int handler,int hid)
+int mmapi_free_advhandlers(int handler,unsigned int hid)
 {
     mmapi_advhandler *hand;
     if(handler)

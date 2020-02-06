@@ -53,3 +53,5 @@ dkms.conf
 
 #Python module builds
 pymodule/build/*
+pymodule/dist/*
+pymodule/miceapi.egg-info

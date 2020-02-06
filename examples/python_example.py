@@ -1,4 +1,4 @@
-import mmapi
+import miceapi
 import re
 
 #This is a simple demonstration of the main mouse-focused features of mmapi
@@ -25,7 +25,7 @@ import re
 #A regex pattern to filter the most common mouse/trackpad/touchpad names
 mouser=re.compile(r'ouse|rackpad|ouchpad')
 #We get a list of available device names and paths
-devices=mmapi.listDevices()
+devices=miceapi.listDevices()
 
 mice=[]
 #We add every device that matches our regex pattern to the mice list
@@ -37,7 +37,7 @@ for i,device in enumerate(devices):
 #   a (string name,string path) tuple
 #   into
 #   a (string name,mmapi.Device(path)) tuple
-mice=[(mouse[0],mmapi.Device(mouse[1])) for mouse in mice]
+mice=[(mouse[0],miceapi.Device(mouse[1])) for mouse in mice]
 
 #Now that all the mice are configured, we wait for a click on each one.
 for mouse in mice:

@@ -42,7 +42,7 @@ typedef struct _mmapi_handler {
     char buffer[sizeof(mmapi_event)*MMAPI_H_BUFSIZ];//Command buffer
     int cc;//Current command position on buffer
     int ec;//Last command position on buffer
-    unsigned short int id;
+    unsigned int id;
     char type;
     int shm;//Shared memory id
     int next;//Next handler shmid
@@ -55,7 +55,7 @@ typedef struct _mmapi_advhandler {
     char buffer[sizeof(struct input_event)*MMAPI_H_BUFSIZ];//Command buffer
     int cc;//Current command position on buffer
     int ec;//Last command position on buffer
-    unsigned short int id;
+    unsigned int id;
     char type;
     int shm;//Shared memory id
     int next;//Next handler shmid
@@ -76,11 +76,11 @@ mmapi_advhandler *mmapi_addadvhandler(mmapi_device *device);
 /*
     Detaches the handler with id <int id> from device <mmapi_device *device>
 */
-int mmapi_remove_handler(mmapi_device *device,int id);
+int mmapi_remove_handler(mmapi_device *device,unsigned int id);
 /*
     Detaches the raw handler with id <int id> from device <mmapi_device *device>
 */
-int mmapi_remove_advhandler(mmapi_device *device,int id);
+int mmapi_remove_advhandler(mmapi_device *device,unsigned int id);
 /*
     Waits for an answer at handler <mmapi_handler *hand>.
     (Pre-decoded)
@@ -94,9 +94,9 @@ struct input_event mmapi_wait_advhandler(mmapi_advhandler *hand);
 /*
     Internal function. Recursively frees handlers
 */
-int mmapi_free_handlers(int handler,int hid);
+int mmapi_free_handlers(int handler,unsigned int hid);
 /*
     Internal function. Recursively frees raw handlers
 */
-int mmapi_free_advhandlers(int handler,int hid);
+int mmapi_free_advhandlers(int handler,unsigned int hid);
 #endif
